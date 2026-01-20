@@ -1,0 +1,43 @@
+name: CI Pipeline
+
+# Trigger this workflow on push to main or pull requests
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x] # Test against multiple Node versions
+
+    steps:
+    # 1. Check out the code from the repo
+    - uses: actions/checkout@v4
+
+    # 2. Install Node.js
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    # 3. Install dependencies (Clean install)
+    - name: Install Dependencies
+      run: npm ci
+
+    # 4. Check for linting errors
+    - name: Run Linter
+      run: npm run lint
+
+    # 5. Run the Test Suite
+    - name: Run Tests
+      run: npm test
+
+    # 6. Attempt to Build (Ensure TypeScript compiles)
+    - name: Build Project
+      run: npm run build
