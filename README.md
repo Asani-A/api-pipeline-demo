@@ -30,7 +30,7 @@ This repository serves as a reference implementation for a modern backend servic
 
 This project follows a modular service-based pattern to decouple business logic from the HTTP transport layer:
 
-```text
+```
 src/
 ├── controllers/  # Request validation and HTTP logic
 ├── services/     # Business logic and data manipulation
@@ -38,6 +38,7 @@ src/
 ├── routes/       # URL mapping
 ├── docs/         # OpenAPI/Swagger definitions
 └── tests/        # Unit and Integration tests
+```
 
 ## Getting Started
 
