@@ -1,7 +1,16 @@
 import app from './app';
+import { connectToRabbitMQ } from './services/mqService';
 
-const port = process.env.PORT || 3000;
+// Defined at the top level, visible to everything below
+const PORT = process.env.PORT || 3000;
 
-app.listen(port, () => {
-  console.log(`[server]: Server is running at http://localhost:${port}`);
-});
+const startServer = async () => {
+  // Initialize RabbitMQ before the server starts
+  await connectToRabbitMQ();
+  
+  app.listen(PORT, () => {
+    console.log(`[server]: Server is running at http://localhost:${PORT}`);
+  });
+};
+
+startServer();

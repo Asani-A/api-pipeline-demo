@@ -1,25 +1,26 @@
 import { User } from '../models/user';
+import { publishUserCreated } from './mqService';
 
 // Simulating a database
-let users: User[] = [];
+const users: User[] = [
+  { id: 1, name: 'John Doe', email: 'john@example.com' },
+  { id: 2, name: 'Jane Doe', email: 'jane@example.com' },
+];
 
-export const userService = {
-  findAll: (): User[] => {
-    return users;
-  },
+export const getAllUsers = (): User[] => {
+  return users;
+};
 
-  create: (name: string, email: string): User => {
-    const newUser: User = {
-      id: Date.now(), // Simple ID generation
-      name,
-      email
-    };
-    users.push(newUser);
-    return newUser;
-  },
+export const createUser = (name: string, email: string): User => {
+  const newUser: User = {
+    id: users.length + 1,
+    name,
+    email,
+  };
+  users.push(newUser);
   
-  // Helper for testing: clear the database
-  clear: () => {
-    users = [];
-  }
+  // FIRE THE EVENT
+  publishUserCreated(newUser);
+  
+  return newUser;
 };

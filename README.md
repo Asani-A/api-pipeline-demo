@@ -1,105 +1,80 @@
-# TypeScript Express API (CI/CD Pipeline Demo)
+# Event-Driven Microservices Demo
+
+A polyglot microservices architecture demonstrating asynchronous communication between Node.js and Python services using RabbitMQ and Docker.
 
 ![Build Status](https://github.com/Asani-A/api-pipeline-demo/actions/workflows/ci.yml/badge.svg)
 
-A production-ready REST API boilerplate demonstrating Clean Architecture, Test-Driven Development (TDD), and Automated DevOps.
-
-## Overview
-
-This repository serves as a reference implementation for a modern backend service. It focuses on software design patterns that ensure scalability, maintainability, and reliability in a team environment.
-
-## Key Features
-
-* **Strict TypeScript:** Fully typed codebase for compile-time safety.
-* **Layered Architecture:** strict separation of concerns (Controllers, Services, Models).
-* **Automated Testing:** Jest and Supertest integration with endpoint coverage.
-* **CI/CD Pipeline:** GitHub Actions workflow that automatically lints, tests, and builds on every push.
-* **API Documentation:** Interactive OpenAPI/Swagger UI served at `/api-docs`.
-* **Security:** Environment configuration management and strict type validation.
-
-## Tech Stack
-
-* **Runtime:** Node.js (v20)
-* **Framework:** Express.js
-* **Language:** TypeScript
-* **Testing:** Jest, Supertest
-* **DevOps:** GitHub Actions
-* **Documentation:** Swagger UI / OpenAPI 3.0
-
 ## Architecture
 
-This project follows a modular service-based pattern to decouple business logic from the HTTP transport layer:
+This project implements a **Producer-Consumer** pattern to decouple the API from background processing:
 
 ```
-src/
-├── controllers/  # Request validation and HTTP logic
-├── services/     # Business logic and data manipulation
-├── models/       # Data interfaces and schemas
-├── routes/       # URL mapping
-├── docs/         # OpenAPI/Swagger definitions
-└── tests/        # Unit and Integration tests
+    A[Client] -- POST /users --> B(Node.js API)
+    B -- Event: user_created --> C{RabbitMQ}
+    C -- Queue --> D(Python Worker)
+    D -- Action --> E[Send Welcome Email]
 ```
+
+* Service A (Node.js): REST API that handles user requests and publishes events.
+* Service B (Python): Background worker that consumes events and performs heavy tasks (simulated email sending).
+* Broker (RabbitMQ): Message queue ensuring reliable delivery between services.
+
+## Key Features
+* Event-Driven Design: Asynchronous communication ensures the API remains fast and responsive.
+* Polyglot Stack: Demonstrates interoperability between TypeScript/Node.js and Python.
+* Resilience: Implements retry logic and durable queues to handle broker downtime or restarts.
+* Containerization: Fully Dockerized environment using Docker Compose.
+* CI/CD: Automated testing and build pipelines via GitHub Actions.
+
+## Tech Stack
+* Services: Node.js (Express), Python (Pika)
+* Broker: RabbitMQ
+* Infrastructure: Docker, Docker Compose
+* Testing: Jest, Supertest
 
 ## Getting Started
 
-* Node.js (v18 or higher)
-* npm
+### Prerequisites 
+* Docker & Docker Compose
+* Git
 
-### Installation
+### Installation & Run 
 
 1. Clone the repository:
 ```
-
 git clone git@github.com:Asani-A/api-pipeline-demo.git
-
-```
-
-2. Install dependencies:
-```
-
 cd api-pipeline-demo
-npm install
-
 ```
 
-### Development
-Start the server in watch mode (hot-reloading enabled):
+2. Start the Ecosystem:
+```
+docker compose up --build
 ```
 
-npm run dev
-
+3. Trigger an Event: Open a new terminal and send a request to the API:
 ```
-* The API will start at http://localhost:3000
-* The interactive documentation is available at http://localhost:3000/api-docs
-
-### Testing
-Run the full test suite using Jest:
+curl -X POST http://localhost:3000/users \
+   -H "Content-Type: application/json" \
+   -d '{"name": "Microservice User", "email": "demo@example.com"}'
 ```
 
-npm test
-
+4. Observe the Result: Check the Docker logs. You will see the Node API publish the message and the Python Worker immediately pick it up:
 ```
-Run the linter to check for code style issues:
-```
-
-npm run lint
-
+api-1     | Message sent to queue: {"id":1,"name":"Microservice User"...}
+worker-1  | [x] Received New User Event: {"id":1,"name":"Microservice User"...}
+worker-1  | [x] Email sent!
 ```
 
-## CI/CD Workflow
-
-This repository uses GitHub Actions to enforce code quality. The pipeline definition is located in .github/workflows/ci.yml.
-
-### Workflow Steps:
-
-1. Trigger: Activates on any push to the main branch or creation of a Pull Request.
-
-2. Install: Performs a clean installation of dependencies (npm ci) to ensure consistency.
-
-3. Lint: Runs ESLint to verify code standards.
-
-4. Test: Executes all unit and integration tests.
-
-5. Build: Compiles the TypeScript code to ensure no type errors exist in the production build.
-
-If any step fails, the merge is blocked to prevent broken code from reaching production.
+## Project Structure
+```
+api-pipeline-demo/
+├── src/               # Node.js API Source
+│   ├── controllers/   # HTTP Handlers
+│   ├── services/      # Business Logic & RabbitMQ Publisher
+│   └── routes/        # Endpoint Definitions
+├── python-worker/     # Python Background Service
+│   ├── main.py        # Consumer Logic
+│   └── Dockerfile     # Python Environment
+├── docker-compose.yml # Orchestration Config
+└── Dockerfile         # Node.js Environment
+```

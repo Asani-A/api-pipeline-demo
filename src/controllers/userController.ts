@@ -1,21 +1,19 @@
 import { Request, Response } from 'express';
-import { userService } from '../services/userService';
+import * as userService from '../services/userService'; 
 
-export const userController = {
-  getUsers: (req: Request, res: Response) => {
-    const users = userService.findAll();
-    res.json(users);
-  },
+export const getUsers = (req: Request, res: Response) => {
+  // Fix: Call "getAllUsers", not "findAll"
+  const users = userService.getAllUsers();
+  res.json(users);
+};
 
-  createUser: (req: Request, res: Response) => {
-    const { name, email } = req.body;
-    
-    if (!name || !email) {
-      res.status(400).json({ error: 'Name and email are required' });
-      return; // Ensure we stop execution here
-    }
-
-    const newUser = userService.create(name, email);
-    res.status(201).json(newUser);
+export const createUser = (req: Request, res: Response) => {
+  const { name, email } = req.body;
+  if (!name || !email) {
+    return res.status(400).json({ error: 'Name and email are required' });
   }
+  
+  // Fix: Call "createUser", not "create"
+  const newUser = userService.createUser(name, email);
+  res.status(201).json(newUser);
 };
